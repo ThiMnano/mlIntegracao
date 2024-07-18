@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extract URL Parameter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+        }
+        #codeValue {
+            font-weight: bold;
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>Extracted Code Parameter</h1>
+    <p>The value after <code>code=</code> and before <code>&</code> is: <span id="codeValue"></span></p>
+
+    <script>
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const codeValue = getQueryParam('code');
+            document.getElementById('codeValue').textContent = codeValue ? codeValue : 'Parameter not found';
+        });
+    </script>
+</body>
+</html>
