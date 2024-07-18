@@ -4,20 +4,40 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Integração Sistema Nano</title>
+    <link rel="icon" href="https://github.com/ThiMnano/mlIntegracao/blob/main/Profile.ico?raw=true" type="image/x-icon"> <!-- Add this line for favicon -->
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 50px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
         }
         #codeValue {
             font-weight: bold;
             color: blue;
+            cursor: pointer;
+        }
+        #copyButton {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #logo {
+            width: 150px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
+    <img id="logo" src="https://github.com/ThiMnano/mlIntegracao/blob/main/Nano.png?raw=true" alt="Logo"> <!-- Replace 'logo.png' with the actual logo file path -->
     <h1>Copie o Codigo Abaixo e cole no sistema!</h1>
     <p>Codigo: <span id="codeValue"></span></p>
+    <button id="copyButton">Copiar Codigo</button>
 
     <script>
         function getQueryParam(param) {
@@ -25,9 +45,28 @@
             return urlParams.get(param);
         }
 
+        function copyToClipboard(text) {
+            const tempInput = document.createElement('input');
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('Codigo copiado para a área de transferência');
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             const codeValue = getQueryParam('code');
-            document.getElementById('codeValue').textContent = codeValue ? codeValue : 'Parameter not found';
+            const codeElement = document.getElementById('codeValue');
+            codeElement.textContent = codeValue ? codeValue : 'Parameter not found';
+            
+            codeElement.addEventListener('click', () => {
+                if (codeValue) copyToClipboard(codeValue);
+            });
+
+            document.getElementById('copyButton').addEventListener('click', () => {
+                if (codeValue) copyToClipboard(codeValue);
+            });
         });
     </script>
 </body>
