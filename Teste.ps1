@@ -1,14 +1,13 @@
 $ErrorActionPreference = 'SilentlyContinue'
 
-# --- Elevar privilégios se necessário ---
+# --- Elevar privilégios automaticamente ---
 if (-Not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    if ([int](Get-CimInstance -Class Win32_OperatingSystem | Select-Object -ExpandProperty BuildNumber) -ge 6000) {
-        Start-Process PowerShell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"cd '$pwd'; & '$PSCommandPath';`""
-        Exit
-    }
+    Write-Host "Reiniciando como administrador..."
+    Start-Process PowerShell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    Exit
 }
 
-# --- Função para pegar versão mais recente do GitHub ---
+# --- Função para pegar a versão mais recente ---
 function Get-LatestRustDesk {
     Write-Output "Buscando versão mais recente do RustDesk..."
     $Page = Invoke-WebRequest -Uri 'https://github.com/rustdesk/rustdesk/releases/latest' -UseBasicParsing
@@ -34,7 +33,7 @@ function Get-LatestRustDesk {
     return @{ Version = $Version; DownloadLink = $DownloadLink }
 }
 
-# --- Função para instalar ou atualizar RustDesk ---
+# --- Instalar ou atualizar RustDesk ---
 function Ensure-RustDeskInstalled {
     param($Latest)
 
@@ -71,7 +70,7 @@ function Ensure-RustDeskInstalled {
     }
 }
 
-# --- Função para garantir que o serviço está rodando ---
+# --- Garantir que o serviço esteja rodando ---
 function Ensure-ServiceRunning {
     param($ServiceName='Rustdesk')
     $arrService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
@@ -83,7 +82,7 @@ function Ensure-ServiceRunning {
     }
 }
 
-# --- Função para configurar RustDesk e pegar ID ---
+# --- Configurar RustDesk e pegar ID ---
 function Configure-And-GetId {
     if (-not (Test-Path "$env:ProgramFiles\RustDesk\rustdesk.exe")) {
         Write-Output "Erro: rustdesk.exe não encontrado em $env:ProgramFiles\RustDesk"
@@ -92,10 +91,10 @@ function Configure-And-GetId {
 
     Push-Location "$env:ProgramFiles\RustDesk"
     try {
-        Write-Output "Instalando serviço (caso ainda não tenha)..."
+        Write-Output "Instalando serviço (se necessário)..."
         & .\rustdesk.exe --install-service
 
-        # Espera visual
+        # Pequena espera visual
         $seconds = 5
         for ($i = $seconds; $i -ge 1; $i--) {
             $percent = [int](($seconds - $i) / $seconds * 100)
