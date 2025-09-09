@@ -83,7 +83,8 @@ function Configure-And-GetId {
         Write-Output "RustDesk ID: $id"
         Write-Output "Password: @acessN@n0!"
         Write-Output "..............................................."
-        pause
+        Write-Host "Pressione ENTER para continuar..."
+        Read-Host
     } finally { Pop-Location }
 }
 
