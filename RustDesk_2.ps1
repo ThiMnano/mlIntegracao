@@ -95,3 +95,4 @@ function Configure-And-GetId {
 $RustDeskOnGitHub = getLatest
 Ensure-RustDeskInstalled -Latest $RustDeskOnGitHub
 Configure-And-GetId
+pause
