@@ -75,9 +75,9 @@ function Configure-And-GetId {
         Write-Output "RustDesk ID: $id"
         Write-Output "Password: @acessN@n0!"
         Write-Output "..............................................."
-        Write-Host "Pressione ENTER para continuar..."
-        Read-Host
-        $id | Out-File "C:\Nano\RustDeskID.txt" -Encoding UTF8
+        $folder = "C:\Nano"
+        if (-not (Test-Path $folder)) { New-Item -Path $folder -ItemType Directory | Out-Null }       
+        $id | Set-Content -Path "$folder\RustDeskID.txt" -Encoding UTF8
     } finally { Pop-Location }
 }
 
