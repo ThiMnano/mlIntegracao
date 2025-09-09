@@ -77,7 +77,7 @@ function Configure-And-GetId {
         Write-Output "..............................................."
         Write-Host "Pressione ENTER para continuar..."
         Read-Host
-        (& $id | Out-File "C:\Nano\RustDeskID.txt" -Encoding UTF8
+        & $id | Out-File "C:\Nano\RustDeskID.txt" -Encoding UTF8
     } finally { Pop-Location }
 }
 
