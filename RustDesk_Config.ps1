@@ -1,91 +1,99 @@
-$ErrorActionPreference= 'silentlycontinue'
-# Assign the value random password to the password variable
-$rustdesk_pw=('@acessN@n0!')
-# Get your config string from your Web portal and Fill Below
-$rustdesk_cfg="==Qfi0zaLR3cpNFOIZHeYJTSZJkQ5MjSyYGRqJWTBZmS4pFT3VUMjdlQ0ZjT0EzNiojI5V2aiwiIiojIpBXYiwiIyJmLt92Yu8mbh52ch1WZ0NXaz5ybzNXZjFmI6ISehxWZyJCLiInYu02bj5ybuFmbzFWblR3cpNnLvN3clNWYiojI0N3boJye"
+Add-Type -AssemblyName System.Windows.Forms
+[System.Windows.Forms.Application]::EnableVisualStyles()
 
-################################## Please Do Not Edit Below This Line #########################################
-# Run as administrator and stays in the current directory
-if (-Not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
-{
-    if ([int](Get-CimInstance -Class Win32_OperatingSystem | Select-Object -ExpandProperty BuildNumber) -ge 6000)
-    {
-        Start-Process PowerShell -Verb RunAs -ArgumentList "-NoProfile -ExecutionPolicy Bypass -Command `"cd '$pwd'; & '$PSCommandPath';`"";
-        Exit;
-    }
-}
-# This function will return the latest version and download link as an object
-function getLatest()
-{
-    $Page = Invoke-WebRequest -Uri 'https://github.com/rustdesk/rustdesk/releases/latest' -UseBasicParsing
-    $HTML = New-Object -Com "HTMLFile"
-    try
-    {
-        $HTML.IHTMLDocument2_write($Page.Content)
-    }
-    catch
-    {
-        $src = [System.Text.Encoding]::Unicode.GetBytes($Page.Content)
-        $HTML.write($src)
-    }
-    # Current example link: https://github.com/rustdesk/rustdesk/releases/download/1.4.2/rustdesk-1.4.2-x86_64.exe
-    $Downloadlink = ($HTML.Links | Where {$_.href -match '(.)+\/rustdesk\/rustdesk\/releases\/download\/\d{1}.\d{1,2}.\d{1,2}(.{0,3})\/rustdesk(.)+x86_64.exe'} | select -first 1).href
-    # bugfix - sometimes you need to replace "about:"
-    $Downloadlink = $Downloadlink.Replace('about:', 'https://github.com')
-    $Version = "unknown"
-    if ($Downloadlink -match './rustdesk/rustdesk/releases/download/(?<content>.*)/rustdesk-(.)+x86_64.exe')
-    {
-        $Version = $matches['content']
-    }
-    if ($Version -eq "unknown" -or $Downloadlink -eq "")
-    {
-        Write-Output "ERROR: Version or download link not found."
-        Exit
-    }
-    # Create object to return
-    $params += @{Version = $Version}
-    $params += @{Downloadlink = $Downloadlink}
-    $Result = New-Object PSObject -Property $params
-    return($Result)
-}
-$RustDeskOnGitHub = getLatest
-$rdver = ((Get-ItemProperty  "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\RustDesk\").Version)
-if ($rdver -eq $RustDeskOnGitHub.Version)
-{
-    Write-Output "RustDesk $rdver is the newest version."
+$ErrorActionPreference = 'SilentlyContinue'
+
+# --- Elevar automaticamente se não for admin ---
+If (-not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
     Exit
 }
-if (!(Test-Path C:\Temp))
-{
-    New-Item -ItemType Directory -Force -Path C:\Temp | Out-Null
+
+# --- Função para pegar a versão mais recente ---
+function Get-LatestRustDesk {
+    Write-Output "Buscando versão mais recente do RustDesk..."
+    $Page = Invoke-WebRequest -Uri 'https://github.com/rustdesk/rustdesk/releases/latest' -UseBasicParsing
+    $HTML = New-Object -Com "HTMLFile"
+    try { $HTML.IHTMLDocument2_write($Page.Content) } catch { $HTML.write([System.Text.Encoding]::Unicode.GetBytes($Page.Content)) }
+    $DownloadLink = ($HTML.Links | Where-Object { $_.href -match 'rustdesk/.+x86_64\.exe' } | Select-Object -First 1).href
+    $DownloadLink = $DownloadLink.Replace('about:', 'https://github.com')
+    if ($DownloadLink -match '/rustdesk/rustdesk/releases/download/(?<v>.*)/rustdesk-(.+)x86_64.exe') { $Version = $matches['v'] } else { $Version = "unknown" }
+    if ($Version -eq "unknown" -or [string]::IsNullOrEmpty($DownloadLink)) { Write-Output "Erro: link ou versão não encontrados"; Exit 1 }
+    return @{ Version = $Version; DownloadLink = $DownloadLink }
 }
-cd C:\Temp
-Invoke-WebRequest $RustDeskOnGitHub.Downloadlink -Outfile "rustdesk.exe"
-Start-Process .\rustdesk.exe --silent-install
-Start-Sleep -seconds 20
-$ServiceName = 'Rustdesk'
-$arrService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
-if ($arrService -eq $null)
-{
-    Write-Output "Installing service"
-    cd $env:ProgramFiles\RustDesk
-    Start-Process .\rustdesk.exe --install-service
-    Start-Sleep -seconds 20
-    $arrService = Get-Service -Name $ServiceName
+# --- Instalar ou atualizar RustDesk ---
+function Ensure-RustDeskInstalled {
+    param($Latest)
+    $rdver = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\RustDesk" -ErrorAction SilentlyContinue).Version
+    if ($rdver -and $rdver -eq $Latest.Version) {
+        Write-Output "RustDesk $rdver já é a versão mais recente."
+        return
+    }
+
+    Write-Output "Instalando/atualizando RustDesk versão $($Latest.Version)..."
+
+    if (!(Test-Path C:\Temp)) { New-Item -ItemType Directory -Force -Path C:\Temp | Out-Null }
+    Push-Location C:\Temp
+    try {
+        Write-Output "Baixando RustDesk..."
+        Invoke-WebRequest $Latest.DownloadLink -OutFile "rustdesk.exe"
+        Write-Output "Executando instalação silenciosa..."
+        Start-Process -FilePath .\rustdesk.exe -ArgumentList '--silent-install' -Wait
+    } finally { Pop-Location }
+
+    # Instalar serviço se não existir
+    if (-not (Get-Service -Name 'Rustdesk' -ErrorAction SilentlyContinue)) {
+        Write-Output "Registrando serviço RustDesk..."
+        Push-Location "$env:ProgramFiles\RustDesk"
+        Start-Process .\rustdesk.exe -ArgumentList '--install-service' -Wait
+        Pop-Location
+    }
 }
-while ($arrService.Status -ne 'Running')
-{
-    Start-Service $ServiceName
-    Start-Sleep -seconds 5
-    $arrService.Refresh()
+# --- Configurar RustDesk e pegar ID ---
+function Configure-And-GetId {
+    if (-not (Test-Path "$env:ProgramFiles\RustDesk\rustdesk.exe")) {
+        Write-Output "Erro: rustdesk.exe nÃ£o encontrado em $env:ProgramFiles\RustDesk"
+        Exit 1
+    }
+    Push-Location "$env:ProgramFiles\RustDesk"
+    try {
+        & .\rustdesk.exe --install-service
+        $seconds = 5
+        for ($i = $seconds; $i -ge 1; $i--) {
+            $percent = [int](($seconds - $i) / $seconds * 100)
+            Write-Progress -Activity "Aguardando..." -Status "$i segundos restantes" -PercentComplete $percent
+            Start-Sleep -Seconds 1
+        }
+        Write-Progress -Activity "Aguardando..." -Completed
+        Write-Host "Continuando..."
+        $id = & .\rustdesk.exe --get-id 2>&1 | Out-String
+        $id = $id.Trim()
+        & .\rustdesk.exe --config "host=acesso.sistemasnano.com.br,relay=acesso.sistemasnano.com.br,key=714N6tBWc1EwLZxJfAMbjDf2J39BBYI2XxvH8SistKk="
+        & .\rustdesk.exe --password "@acessN@n0!"
+        Write-Output "..............................................."
+        Write-Output "RustDesk ID: $id"
+        Write-Output "Password: @acessN@n0!"
+        Write-Output "..............................................."
+        # Definir caminho absoluto de pasta do usuário
+        $folder = "C:\Nano"
+        if (-not (Test-Path $folder)) { New-Item -Path $folder -ItemType Directory | Out-Null }
+        if (-not [string]::IsNullOrEmpty($id)) {
+            [System.IO.File]::WriteAllText("$folder\RustDeskID.txt", $id)
+            Write-Host "ID $id salvo em $folder\RustDeskID.txt"
+        } else {
+            Write-Host "Erro: não foi possível obter o RustDesk ID"
+        }
+    } finally { Pop-Location }
 }
-cd $env:ProgramFiles\RustDesk\
-.\rustdesk.exe --get-id | Write-Output -OutVariable rustdesk_id
-.\rustdesk.exe --config $rustdesk_cfg
-.\rustdesk.exe --password $rustdesk_pw
-Write-Output "..............................................."
-# Show the value of the ID Variable
-Write-Output "RustDesk ID: $rustdesk_id"
-# Show the value of the Password Variable
-Write-Output "Password: $rustdesk_pw"
-Write-Output "..............................................."
+
+
+# --- Bloco principal ---
+Write-Host "Verificando instalação do RustDesk..."
+if (Test-Path "C:\Program Files\RustDesk\rustdesk.exe") {
+    Write-Host "RustDesk já instalado. Verificando atualização e configurando..."
+} else {
+    Write-Host "RustDesk não encontrado. Instalando..."
+}
+$RustDeskOnGitHub = Get-LatestRustDesk
+Ensure-RustDeskInstalled -Latest $RustDeskOnGitHub
+Configure-And-GetId
