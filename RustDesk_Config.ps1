@@ -1,7 +1,7 @@
 $ErrorActionPreference= 'silentlycontinue'
 
 # Assign the value random password to the password variable
-$rustdesk_pw=(@cess0Nano@1)
+$rustdesk_pw=(acess0N9n0123)
 
 # Get your config string from your Web portal and Fill Below
 $rustdesk_cfg="9JSZ5p0biNjTwkkavlWSpdXaj1mVzlFWrl2TplUaMNkSoN2Rrl2TplUaMNkSypFWrl2TplUamFVPiojI5V2aiwiIiojIpBXYiwiIyJmLt92Yu8mbh52ch1WZ0NXaz5ybzNXZjFmI6ISehxWZyJCLiInYu02bj5ybuFmbzFWblR3cpNnLvN3clNWYiojI0N3boJye"
@@ -118,5 +118,6 @@ Write-Output "..............................................."
 
 Write-Host "`nScript finalizado. Pressione qualquer tecla para sair..."
 Pause
+
 
 
