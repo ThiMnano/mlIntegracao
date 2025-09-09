@@ -58,7 +58,7 @@ function Configure-And-GetId {
     Push-Location "$env:ProgramFiles\RustDesk"
     try {
         & .\rustdesk.exe --install-service
-        $seconds = 5
+        $seconds = 10
         for ($i = $seconds; $i -ge 1; $i--) {
             $percent = [int](($seconds - $i) / $seconds * 100)
             Write-Progress -Activity "Aguardando..." -Status "$i segundos restantes" -PercentComplete $percent
@@ -97,3 +97,4 @@ if (Test-Path "C:\Program Files\RustDesk\rustdesk.exe") {
 $RustDeskOnGitHub = Get-LatestRustDesk
 Ensure-RustDeskInstalled -Latest $RustDeskOnGitHub
 Configure-And-GetId
+
