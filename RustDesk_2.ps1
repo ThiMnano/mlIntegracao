@@ -1,9 +1,4 @@
 $ErrorActionPreference= 'silentlycontinue'
-# Assign the value random password to the password variable
-#$rustdesk_pw=('@acessN@n0!')
-# Get your config string from your Web portal and Fill Below
-#$rustdesk_cfg="==Qfi0zaLR3cpNFOIZHeYJTSZJkQ5MjSyYGRqJWTBZmS4pFT3VUMjdlQ0ZjT0EzNiojI5V2aiwiIiojIpBXYiwiIyJmLt92Yu8mbh52ch1WZ0NXaz5ybzNXZjFmI6ISehxWZyJCLiInYu02bj5ybuFmbzFWblR3cpNnLvN3clNWYiojI0N3boJye"
-
 if (-Not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 {
     if ([int](Get-CimInstance -Class Win32_OperatingSystem | Select-Object -ExpandProperty BuildNumber) -ge 6000)
@@ -17,7 +12,6 @@ function getLatest()
     $Page = Invoke-WebRequest -Uri 'https://github.com/rustdesk/rustdesk/releases/latest' -UseBasicParsing
     $HTML = New-Object -Com "HTMLFile"
     try { $HTML.IHTMLDocument2_write($Page.Content) } catch { $src = [System.Text.Encoding]::Unicode.GetBytes($Page.Content); $HTML.write($src) }
-
     $Downloadlink = ($HTML.Links |
         Where-Object { $_.href -match '(.)+\/rustdesk\/rustdesk\/releases\/download\/\d{1,}\.\d{1,}\.\d{1,}(.{0,3})\/rustdesk(.)+x86_64.exe' } |
         Select-Object -First 1).href
@@ -89,10 +83,10 @@ function Configure-And-GetId {
         Write-Output "RustDesk ID: $id"
         Write-Output "Password: @acessN@n0!"
         Write-Output "..............................................."
+        pause
     } finally { Pop-Location }
 }
 
 $RustDeskOnGitHub = getLatest
 Ensure-RustDeskInstalled -Latest $RustDeskOnGitHub
 Configure-And-GetId
-pause
