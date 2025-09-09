@@ -115,3 +115,6 @@ Write-Output "RustDesk ID: $rustdesk_id"
 Write-Output "Password: $rustdesk_pw"
 
 Write-Output "..............................................."
+
+Write-Host "`nScript finalizado. Pressione qualquer tecla para sair..."
+Pause
