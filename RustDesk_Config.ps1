@@ -1,13 +1,10 @@
 $ErrorActionPreference= 'silentlycontinue'
-
 # Assign the value random password to the password variable
 $rustdesk_pw=('@acessN@n0!')
-
 # Get your config string from your Web portal and Fill Below
 $rustdesk_cfg="==Qfi0zaLR3cpNFOIZHeYJTSZJkQ5MjSyYGRqJWTBZmS4pFT3VUMjdlQ0ZjT0EzNiojI5V2aiwiIiojIpBXYiwiIyJmLt92Yu8mbh52ch1WZ0NXaz5ybzNXZjFmI6ISehxWZyJCLiInYu02bj5ybuFmbzFWblR3cpNnLvN3clNWYiojI0N3boJye"
 
 ################################## Please Do Not Edit Below This Line #########################################
-
 # Run as administrator and stays in the current directory
 if (-Not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))
 {
@@ -17,7 +14,6 @@ if (-Not ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
         Exit;
     }
 }
-
 # This function will return the latest version and download link as an object
 function getLatest()
 {
@@ -32,58 +28,43 @@ function getLatest()
         $src = [System.Text.Encoding]::Unicode.GetBytes($Page.Content)
         $HTML.write($src)
     }
-
-    # Current example link: https://github.com/rustdesk/rustdesk/releases/download/1.2.6/rustdesk-1.2.6-x86_64.exe
+    # Current example link: https://github.com/rustdesk/rustdesk/releases/download/1.4.2/rustdesk-1.4.2-x86_64.exe
     $Downloadlink = ($HTML.Links | Where {$_.href -match '(.)+\/rustdesk\/rustdesk\/releases\/download\/\d{1}.\d{1,2}.\d{1,2}(.{0,3})\/rustdesk(.)+x86_64.exe'} | select -first 1).href
-
     # bugfix - sometimes you need to replace "about:"
     $Downloadlink = $Downloadlink.Replace('about:', 'https://github.com')
-
     $Version = "unknown"
     if ($Downloadlink -match './rustdesk/rustdesk/releases/download/(?<content>.*)/rustdesk-(.)+x86_64.exe')
     {
         $Version = $matches['content']
     }
-
     if ($Version -eq "unknown" -or $Downloadlink -eq "")
     {
         Write-Output "ERROR: Version or download link not found."
         Exit
     }
-
     # Create object to return
     $params += @{Version = $Version}
     $params += @{Downloadlink = $Downloadlink}
     $Result = New-Object PSObject -Property $params
-
     return($Result)
 }
-
 $RustDeskOnGitHub = getLatest
-
-
 $rdver = ((Get-ItemProperty  "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\RustDesk\").Version)
-
 if ($rdver -eq $RustDeskOnGitHub.Version)
 {
     Write-Output "RustDesk $rdver is the newest version."
     Exit
 }
-
 if (!(Test-Path C:\Temp))
 {
     New-Item -ItemType Directory -Force -Path C:\Temp | Out-Null
 }
-
 cd C:\Temp
-
 Invoke-WebRequest $RustDeskOnGitHub.Downloadlink -Outfile "rustdesk.exe"
 Start-Process .\rustdesk.exe --silent-install
 Start-Sleep -seconds 20
-
 $ServiceName = 'Rustdesk'
 $arrService = Get-Service -Name $ServiceName -ErrorAction SilentlyContinue
-
 if ($arrService -eq $null)
 {
     Write-Output "Installing service"
@@ -92,34 +73,19 @@ if ($arrService -eq $null)
     Start-Sleep -seconds 20
     $arrService = Get-Service -Name $ServiceName
 }
-
 while ($arrService.Status -ne 'Running')
 {
     Start-Service $ServiceName
     Start-Sleep -seconds 5
     $arrService.Refresh()
 }
-
 cd $env:ProgramFiles\RustDesk\
 .\rustdesk.exe --get-id | Write-Output -OutVariable rustdesk_id
-
 .\rustdesk.exe --config $rustdesk_cfg
-
 .\rustdesk.exe --password $rustdesk_pw
-
 Write-Output "..............................................."
 # Show the value of the ID Variable
 Write-Output "RustDesk ID: $rustdesk_id"
-
 # Show the value of the Password Variable
 Write-Output "Password: $rustdesk_pw"
-
 Write-Output "..............................................."
-
-Write-Host "`nScript finalizado. Pressione qualquer tecla para sair..."
-Pause
-
-
-
-
-
