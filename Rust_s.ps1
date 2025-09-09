@@ -92,15 +92,15 @@ function Config_PegarId {
     }
 }
 
-
-
-Write-Host "Verificando instalação do RustDesk..."
+Write-Host "Verificando instalacao do RustDesk..."
 if (Test-Path "C:\Program Files\RustDesk\rustdesk.exe") {
-    Write-Host "RustDesk já instalado."
+    Write-Host "RustDesk ja instalado."
+} 
+else 
+{
+    Write-Host "RustDesk nao encontrado."
     $RustDeskOnGitHub = UltimaVesao
     Instalar -Latest $RustDeskOnGitHub
     TimerSleep(10, "Aguardando...")
-    Config_PegarId
-} else {
-    Write-Host "RustDesk não encontrado. Instalando..."
 }
+Config_PegarId
