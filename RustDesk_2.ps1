@@ -52,36 +52,43 @@ function Ensure-RustDeskInstalled {
 # --- Configurar RustDesk e pegar ID ---
 function Configure-And-GetId {
     if (-not (Test-Path "$env:ProgramFiles\RustDesk\rustdesk.exe")) {
-        Write-Output "Erro: rustdesk.exe não encontrado em $env:ProgramFiles\RustDesk"
+        Write-Output "Erro: rustdesk.exe nÃ£o encontrado em $env:ProgramFiles\RustDesk"
         Exit 1
     }
-
-    # Garantir que a pasta de destino exista
-    $folder = "C:\Nano"
-    if (-not (Test-Path $folder)) { New-Item -Path $folder -ItemType Directory | Out-Null }
-
     Push-Location "$env:ProgramFiles\RustDesk"
     try {
         & .\rustdesk.exe --install-service
-        Start-Sleep -Seconds 5
-
-        # Pegar o ID diretamente, removendo quebras de linha
-        $id = (& .\rustdesk.exe --get-id 2>&1).Trim()
-
+        $seconds = 5
+        for ($i = $seconds; $i -ge 1; $i--) {
+            $percent = [int](($seconds - $i) / $seconds * 100)
+            Write-Progress -Activity "Aguardando..." -Status "$i segundos restantes" -PercentComplete $percent
+            Start-Sleep -Seconds 1
+        }
+        Write-Progress -Activity "Aguardando..." -Completed
+        Write-Host "Continuando..."
+        $id = & .\rustdesk.exe --get-id 2>&1 | Out-String
+        $id = $id.Trim()
         & .\rustdesk.exe --config "host=acesso.sistemasnano.com.br,relay=acesso.sistemasnano.com.br,key=714N6tBWc1EwLZxJfAMbjDf2J39BBYI2XxvH8SistKk="
         & .\rustdesk.exe --password "@acessN@n0!"
         Ensure-ServiceRunning -ServiceName 'Rustdesk'
-
         Write-Output "..............................................."
         Write-Output "RustDesk ID: $id"
         Write-Output "Password: @acessN@n0!"
         Write-Output "..............................................."
-
-        # Salvar ID no arquivo TXT
-        [System.IO.File]::WriteAllText("$folder\RustDeskID.txt", $id)
+        # Definir caminho absoluto de pasta do usuário
+        $folder = "$env:USERPROFILE\Nano"
+        if (-not (Test-Path $folder)) { New-Item -Path $folder -ItemType Directory | Out-Null }
+        
+        # Pegar o ID e salvar
+        $id = (& "$env:ProgramFiles\RustDesk\rustdesk.exe" --get-id 2>&1).Trim()
+        if (-not [string]::IsNullOrEmpty($id)) {
+            [System.IO.File]::WriteAllText("$folder\RustDeskID.txt", $id)
+            Write-Host "ID salvo em $folder\RustDeskID.txt"
+        } else {
+            Write-Host "Erro: não foi possível obter o RustDesk ID"
+        }
     } finally { Pop-Location }
 }
-
 
 
 # --- Bloco principal ---
