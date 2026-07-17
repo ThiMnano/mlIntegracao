@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -48,8 +49,17 @@
             animation: fade .4s
         }
 
-        img {
-            width: 170px
+        img{
+            width:380px;
+            max-width:80%;
+            height:auto;
+            margin-bottom:20px;
+            filter:drop-shadow(0 10px 25px rgba(37,99,235,.18));
+            transition:transform .25s ease;
+        }
+
+        img:hover{
+            transform:scale(1.03);
         }
 
         .code {
@@ -113,9 +123,10 @@
         }
     </style>
 </head>
+
 <body>
     <div class="card">
-        <img src="https://github.com/ThiMnano/mlIntegracao/blob/main/Nano.png?raw=true" alt="Nano">
+        <img src="https://raw.githubusercontent.com/ThiMnano/mlIntegracao/refs/heads/main/Logo.svg" alt="Nano">
         <h2>Integração Nano</h2>
         <p>Copie o código abaixo e cole no sistema.</p>
         <div id="code" class="code">Carregando...</div>
@@ -142,4 +153,5 @@
         if (code) setTimeout(copy, 300);
     </script>
 </body>
+
 </html>
