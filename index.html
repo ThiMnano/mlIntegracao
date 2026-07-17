@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -14,7 +13,6 @@
             --txt: #1f2937;
             --ok: #16a34a
         }
-
         @media(prefers-color-scheme:dark) {
             :root {
                 --bg: #0f172a;
@@ -22,11 +20,9 @@
                 --txt: #f3f4f6
             }
         }
-
         * {
             box-sizing: border-box
         }
-
         body {
             margin: 0;
             font-family: Segoe UI, Arial, sans-serif;
@@ -37,7 +33,6 @@
             min-height: 100vh;
             color: var(--txt)
         }
-
         .card {
             background: var(--card);
             padding: 32px;
@@ -48,55 +43,58 @@
             text-align: center;
             animation: fade .4s
         }
-
-        img{
-            width:380px;
-            max-width:80%;
-            height:auto;
-            margin-bottom:20px;
-            filter:drop-shadow(0 10px 25px rgba(37,99,235,.18));
-            transition:transform .25s ease;
+        img {
+            width: 380px;
+            max-width: 80%;
+            height: auto;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 10px 25px rgba(37, 99, 235, .18));
+            transition: transform .25s ease;
         }
-
-        img:hover{
-            transform:scale(1.03);
+        img:hover {
+            transform: scale(1.03);
         }
-
         .code{
             margin:22px 0;
             padding:18px 20px;
-
             border:2px dashed #3b82f6;
             border-radius:14px;
             background:rgba(37,99,235,.05);
-
-            font-family:Consolas, "Courier New", monospace;
+            font-family:Consolas,"Courier New",monospace;
             font-size:22px;
             font-weight:600;
             letter-spacing:.5px;
             line-height:1.5;
-
             white-space:nowrap;
             overflow-x:auto;
             overflow-y:hidden;
-
+            text-align:center;
             cursor:pointer;
             user-select:all;
-            text-align:left;
-
-            scrollbar-width:none;      /* Firefox */
-            -ms-overflow-style:none;   /* IE */
+            scroll-behavior:smooth;
+            scrollbar-width:none;
+            -ms-overflow-style:none; 
+            transition:
+                background .25s ease,
+                border-color .25s ease,
+                box-shadow .25s ease,
+                transform .15s ease;
         }
-
         .code::-webkit-scrollbar{
-            display:none;              /* Chrome, Edge e Safari */
+            display:none;
         }
-
         .code:hover{
             border-color:#4f8cff;
             background:rgba(37,99,235,.08);
+            box-shadow:0 0 18px rgba(37,99,235,.18);
+            transform:translateY(-1px);
         }
-
+        .code:active{
+            transform:scale(.995);
+        }
+        .card{
+            overflow:hidden;
+        }
         button {
             background: var(--p);
             color: #fff;
@@ -107,17 +105,14 @@
             cursor: pointer;
             transition: .2s
         }
-
         button:hover {
             transform: translateY(-2px)
         }
-
         small {
             display: block;
             margin-top: 18px;
             color: #6b7280
         }
-
         .toast {
             position: fixed;
             bottom: 25px;
@@ -129,17 +124,14 @@
             border-radius: 8px;
             transition: .3s
         }
-
         .toast.show {
             transform: translateX(-50%) translateY(0)
         }
-
         @keyframes fade {
             from {
                 opacity: 0;
                 transform: scale(.95)
             }
-
             to {
                 opacity: 1;
                 transform: scale(1)
@@ -147,7 +139,6 @@
         }
     </style>
 </head>
-
 <body>
     <div class="card">
         <img src="https://raw.githubusercontent.com/ThiMnano/mlIntegracao/refs/heads/main/Logo.svg" alt="Nano">
@@ -158,24 +149,56 @@
         <small id="msg">Após copiar, volte ao Nano.</small>
     </div>
     <div id="toast" class="toast">Código copiado com sucesso!</div>
-    <script>
-        const p = new URLSearchParams(location.search);
-        const code = (p.get("code") || "").trim();
-        const el = document.getElementById("code"), btn = document.getElementById("btn"), msg = document.getElementById("msg");
-        if (!code) { el.textContent = "Nenhum código recebido"; btn.disabled = true; msg.textContent = "Solicite uma nova integração."; }
-        else el.textContent = code;
-        function toast(t) { const x = document.getElementById("toast"); x.textContent = t; x.classList.add("show"); setTimeout(() => x.classList.remove("show"), 2200); }
-        async function copy() {
-            if (!code) return;
-            try { await navigator.clipboard.writeText(code); }
-            catch (e) {
-                const i = document.createElement("input"); i.value = code; document.body.appendChild(i); i.select(); document.execCommand("copy"); i.remove();
-            }
-            toast("Código copiado com sucesso!");
+<script>
+    const p = new URLSearchParams(location.search);
+    const code = (p.get("code") || "").trim();
+    const el = document.getElementById("code");
+    const btn = document.getElementById("btn");
+    const msg = document.getElementById("msg");
+    if (!code) {
+        el.textContent = "Nenhum código recebido";
+        btn.disabled = true;
+        msg.textContent = "Solicite uma nova integração.";
+    } else {
+        el.textContent = code;
+        el.scrollLeft = 0;
+    }
+    function toast(texto) {
+        const toast = document.getElementById("toast");
+        toast.textContent = texto;
+        toast.classList.add("show");
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 2200);
+    }
+    async function copy() {
+        if (!code)
+            return;
+        try {
+            await navigator.clipboard.writeText(code);
         }
-        btn.onclick = copy; el.onclick = copy;
-        if (code) setTimeout(copy, 300);
-    </script>
+        catch {
+            const input = document.createElement("input");
+            input.value = code;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand("copy");
+            document.body.removeChild(input);
+        }
+        toast("Código copiado com sucesso!");
+    }
+    btn.onclick = copy;
+    el.addEventListener("click", () => {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        copy();
+    });
+    if (code) {
+        setTimeout(copy, 300);
+    }
+</script>
 </body>
-
 </html>
