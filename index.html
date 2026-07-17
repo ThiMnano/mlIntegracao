@@ -1,73 +1,145 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Integração Sistema Nano</title>
-    <link rel="icon" href="https://github.com/ThiMnano/mlIntegracao/blob/main/Profile.ico?raw=true" type="image/x-icon"> <!-- Add this line for favicon -->
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Integração Nano</title>
+    <link rel="icon" href="https://github.com/ThiMnano/mlIntegracao/blob/main/Profile.ico?raw=true">
     <style>
+        :root {
+            --p: #2563eb;
+            --bg: #eef4ff;
+            --card: #fff;
+            --txt: #1f2937;
+            --ok: #16a34a
+        }
+
+        @media(prefers-color-scheme:dark) {
+            :root {
+                --bg: #0f172a;
+                --card: #1e293b;
+                --txt: #f3f4f6
+            }
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
+            font-family: Segoe UI, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--bg), #c7d2fe);
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
+            color: var(--txt)
+        }
+
+        .card {
+            background: var(--card);
+            padding: 32px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .15);
+            max-width: 520px;
+            width: 92%;
             text-align: center;
+            animation: fade .4s
         }
-        #codeValue {
-            font-weight: bold;
-            color: blue;
+
+        img {
+            width: 170px
+        }
+
+        .code {
+            margin: 22px 0;
+            padding: 18px;
+            border: 2px dashed var(--p);
+            border-radius: 14px;
+            font: 700 30px Consolas, monospace;
+            letter-spacing: 2px;
             cursor: pointer;
+            user-select: all
         }
-        #copyButton {
-            margin-top: 20px;
-            padding: 10px 20px;
+
+        button {
+            background: var(--p);
+            color: #fff;
+            border: 0;
+            padding: 14px 24px;
+            border-radius: 10px;
             font-size: 16px;
             cursor: pointer;
+            transition: .2s
         }
-        #logo {
-            width: 150px;
-            margin-bottom: 20px;
+
+        button:hover {
+            transform: translateY(-2px)
+        }
+
+        small {
+            display: block;
+            margin-top: 18px;
+            color: #6b7280
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: var(--ok);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 8px;
+            transition: .3s
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0)
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0;
+                transform: scale(.95)
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1)
+            }
         }
     </style>
 </head>
 <body>
-    <img id="logo" src="https://github.com/ThiMnano/mlIntegracao/blob/main/Nano.png?raw=true" alt="Logo"> <!-- Replace 'logo.png' with the actual logo file path -->
-    <h1>Copie o Codigo Abaixo e cole no sistema!</h1>
-    <p>Codigo: <span id="codeValue"></span></p>
-    <button id="copyButton">Copiar Codigo</button>
-
+    <div class="card">
+        <img src="https://github.com/ThiMnano/mlIntegracao/blob/main/Nano.png?raw=true" alt="Nano">
+        <h2>Integração Nano</h2>
+        <p>Copie o código abaixo e cole no sistema.</p>
+        <div id="code" class="code">Carregando...</div>
+        <button id="btn">📋 Copiar código</button>
+        <small id="msg">Após copiar, volte ao Nano.</small>
+    </div>
+    <div id="toast" class="toast">Código copiado com sucesso!</div>
     <script>
-        function getQueryParam(param) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(param);
+        const p = new URLSearchParams(location.search);
+        const code = (p.get("code") || "").trim();
+        const el = document.getElementById("code"), btn = document.getElementById("btn"), msg = document.getElementById("msg");
+        if (!code) { el.textContent = "Nenhum código recebido"; btn.disabled = true; msg.textContent = "Solicite uma nova integração."; }
+        else el.textContent = code;
+        function toast(t) { const x = document.getElementById("toast"); x.textContent = t; x.classList.add("show"); setTimeout(() => x.classList.remove("show"), 2200); }
+        async function copy() {
+            if (!code) return;
+            try { await navigator.clipboard.writeText(code); }
+            catch (e) {
+                const i = document.createElement("input"); i.value = code; document.body.appendChild(i); i.select(); document.execCommand("copy"); i.remove();
+            }
+            toast("Código copiado com sucesso!");
         }
-
-        function copyToClipboard(text) {
-            const tempInput = document.createElement('input');
-            tempInput.value = text;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempInput);
-            alert('Codigo copiado para a área de transferência');
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const codeValue = getQueryParam('code');
-            const codeElement = document.getElementById('codeValue');
-            codeElement.textContent = codeValue ? codeValue : 'Parameter not found';
-            
-            codeElement.addEventListener('click', () => {
-                if (codeValue) copyToClipboard(codeValue);
-            });
-
-            document.getElementById('copyButton').addEventListener('click', () => {
-                if (codeValue) copyToClipboard(codeValue);
-            });
-        });
+        btn.onclick = copy; el.onclick = copy;
+        if (code) setTimeout(copy, 300);
     </script>
 </body>
 </html>
